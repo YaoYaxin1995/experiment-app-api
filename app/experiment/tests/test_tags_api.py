@@ -20,6 +20,7 @@ def detail_url(tag_id):
     """Create and return a tag detail."""
     return reverse('experiment:tag-detail', args=[tag_id])
 
+
 def create_user(email='user@example.com', password='password123'):
     """Create and return a new user."""
     return get_user_model().objects.create_user(email=email, password=password)
@@ -71,7 +72,6 @@ class PrivateTagsApiTests(TestCase):
         self.assertEqual(res.data[0]['name'], tag.name)
         self.assertEqual(res.data[0]['id'], tag.id)
 
-
     def test_update_tag(self):
         tag = Tag.objects.create(user=self.user, name='memory')
 
@@ -93,5 +93,3 @@ class PrivateTagsApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         tags = Tag.objects.filter(user=self.user)
         self.assertFalse(tags.exists())
-
-

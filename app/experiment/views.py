@@ -53,7 +53,6 @@ class BaseExperimentAttrViewSet(mixins.UpdateModelMixin,
         return self.queryset.filter(user=self.request.user).order_by('-name')
 
 
-
 class TagViewSet(BaseExperimentAttrViewSet):
     serializer_class = serializers.TagSerializer
     queryset = Tag.objects.all()

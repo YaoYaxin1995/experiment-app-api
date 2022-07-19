@@ -44,9 +44,11 @@ def create_experiment(user, **params):
     experiment = Experiment.objects.create(user=user, **defaults)
     return experiment
 
+
 def create_user(**params):
     """create and return a new user."""
     return get_user_model().objects.create(**params)
+
 
 class PublicExperimentAPITest(TestCase):
     """Test unauthenticated API request."""
@@ -66,7 +68,10 @@ class PrivateExperimentApiTest(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        self.user = create_user(email='test@example.com', password='testpass123')
+        self.user = create_user(
+            email='test@example.com',
+            password='testpass123'
+            )
         self.client.force_authenticate(self.user)
 
     def test_retrieve_experiment(self):
@@ -83,7 +88,10 @@ class PrivateExperimentApiTest(TestCase):
 
     def test_experiment_list_limited_to_user(self):
         """Test list of experiments is limited to authenticated user."""
-        other_user = create_user(email='other_user@example.com',password='otherpass123')
+        other_user = create_user(
+            email='other_user@example.com',
+            password='otherpass123'
+            )
 
         create_experiment(self.user)
         create_experiment(other_user)
@@ -92,7 +100,7 @@ class PrivateExperimentApiTest(TestCase):
 
         experiments = Experiment.objects.filter(user=self.user)
         serializer = ExperimentSerializer(experiments, many=True)
-        self.assertEqual(res.status_code,status.HTTP_200_OK)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
     def test_get_experiment_detail(self):
@@ -146,7 +154,7 @@ class PrivateExperimentApiTest(TestCase):
             user=self.user,
             title='Sample experiment title',
             link='http://example.com/experiment.pdf',
-            description = 'sample experiment description.'
+            description='sample experiment description.'
         )
 
         payload = {
@@ -210,7 +218,7 @@ class PrivateExperimentApiTest(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         experiments = Experiment.objects.filter(user=self.user)
-        self.assertEqual(experiments.count(),1)
+        self.assertEqual(experiments.count(), 1)
         experiment = experiments[0]
         self.assertEqual(experiment.tags.count(), 2)
         for tag in payload['tags']:
@@ -271,7 +279,6 @@ class PrivateExperimentApiTest(TestCase):
         self.assertIn(tag_afternoon, experiment.tags.all())
         self.assertNotIn(tag_night, experiment.tags.all())
 
-
     def test_clear_experiment_tags(self):
         """Test clearing a experiment tags."""
         tag = Tag.objects.create(user=self.user, name='Dessert')
@@ -309,19 +316,25 @@ class PrivateExperimentApiTest(TestCase):
 
     def test_create_experiment_with_existing_ingredient(self):
         """Test creating a new experiment with existing ingredient."""
-        ingredient = Ingredient.objects.create(user=self.user, name='Middle school student')
+        ingredient = Ingredient.objects.create(
+            user=self.user,
+            name='Middle school student'
+            )
         payload = {
             'title': 'student math trainning',
             'time_minutes': 50,
             'price': Decimal('40.0'),
-            'ingredients': [{'name': 'Middle school student'}, {'name': 'dyscalculia'}],
+            'ingredients': [
+                {'name': 'Middle school student'},
+                {'name': 'dyscalculia'}
+                ],
         }
-        res =self.client.post(EXPERIMENT_URL, payload, format='json')
+        res = self.client.post(EXPERIMENT_URL, payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         experiments = Experiment.objects.filter(user=self.user)
         self.assertEqual(experiments.count(), 1)
-        experiment=experiments[0]
+        experiment = experiments[0]
         self.assertEqual(experiment.ingredients.count(), 2)
         self.assertIn(ingredient, experiment.ingredients.all())
         for ingredient in payload['ingredients']:
@@ -340,16 +353,25 @@ class PrivateExperimentApiTest(TestCase):
         res = self.client.patch(url, payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        new_ingredient = Ingredient.objects.get(user=self.user, name='ingredient1')
+        new_ingredient = Ingredient.objects.get(
+            user=self.user,
+            name='ingredient1'
+            )
         self.assertIn(new_ingredient, experiment.ingredients.all())
 
     def test_update_experiment_assign_ingredient(self):
         """Test assigning an existing ingredient when updating a experiment."""
-        ingredient1 = Ingredient.objects.create(user=self.user, name='ingredient1')
+        ingredient1 = Ingredient.objects.create(
+            user=self.user,
+            name='ingredient1'
+            )
         experiment = create_experiment(user=self.user)
         experiment.ingredients.add(ingredient1)
 
-        ingredient2 = Ingredient.objects.create(user=self.user, name='ingredient2')
+        ingredient2 = Ingredient.objects.create(
+            user=self.user,
+            name='ingredient2'
+            )
         payload = {'ingredients': [{'name': 'ingredient2'}]}
         url = detail_url(experiment.id)
         res = self.client.patch(url, payload, format='json')
@@ -360,7 +382,10 @@ class PrivateExperimentApiTest(TestCase):
 
     def test_clear_experiment_ingredients(self):
         """Test clearing a experiments ingredients."""
-        ingredient = Ingredient.objects.create(user=self.user, name='clearIngredient')
+        ingredient = Ingredient.objects.create(
+            user=self.user,
+            name='clearIngredient'
+            )
         experiment = create_experiment(user=self.user)
         experiment.ingredients.add(ingredient)
 
@@ -370,6 +395,7 @@ class PrivateExperimentApiTest(TestCase):
 
         self.assertEqual(res.status_code,status.HTTP_200_OK)
         self.assertEqual(experiment.ingredients.count(), 0)
+
 
 
 

@@ -11,7 +11,6 @@ from rest_framework.routers import DefaultRouter
 from experiment import views
 
 
-
 router = DefaultRouter()
 router.register('experiments', views.ExperimentViewSet)
 router.register('tags', views.TagViewSet)
