@@ -1,12 +1,14 @@
 """
 Tests for models.
 """
+from unittest.mock import patch
 from decimal import Decimal
 
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
 from core import models
+
 
 
 def create_user(email='user@example.com', password='password123'):
@@ -86,3 +88,12 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(ingredient), ingredient.name)
+
+    @patch('core.models.uuid.uuid4')
+    def test_experiment_file_name_uuid(self, mock_uuid):
+        """Test generating image patch."""
+        uuid = 'test-uuid'
+        mock_uuid.return_value = uuid
+        file_path = models.experiment_image_file_path(None, 'example.jpg')
+
+        self.assertEqual(file_path, f'uploads/experiment/{uuid}.jpg')

@@ -46,7 +46,7 @@ class ExperimentDetailSerializer(ExperimentSerializer):
     """Serializer for experiment detail view."""
 
     class Meta(ExperimentSerializer.Meta):
-        fields = ExperimentSerializer.Meta.fields + ['description']
+        fields = ExperimentSerializer.Meta.fields + ['description','image']
 
     def _get_or_create_tags(self, tags, experiment):
         """Handle getting or creating tags on as needed."""
@@ -93,3 +93,13 @@ class ExperimentDetailSerializer(ExperimentSerializer):
 
         instance.save()
         return instance
+
+
+class ExperiemntImageSerializer(serializers.ModelSerializer):
+    """Serialiazer for uploading image to experiment."""
+
+    class Meta:
+        model = Experiment
+        fields = ['id', 'image']
+        read_only_fields = ['id']
+        extra_kwargs = {'image': {'required': 'True'}}

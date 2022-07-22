@@ -1,6 +1,8 @@
 """
 Tests for the tags API.
 """
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TestCase
@@ -8,7 +10,10 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Tag
+from core.models import (
+    Tag,
+    Experiment,
+)
 
 from experiment.serializers import TagSerializer
 
@@ -93,3 +98,45 @@ class PrivateTagsApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         tags = Tag.objects.filter(user=self.user)
         self.assertFalse(tags.exists())
+
+    def test_filter_tags_assighed_to_experiment(self):
+        """Test listing tags by those assigned to experiments."""
+        tag1 = Tag.objects.create(user=self.user, name='Tag test filter 1')
+        tag2 = Tag.objects.create(user=self.user, name='Tag test filter 2')
+        experiment = Experiment.objects.create(
+            title='tag iCAN',
+            time_minutes=5,
+            price=Decimal('20'),
+            user=self.user,
+        )
+        experiment.tags.add(tag1)
+
+        res = self.client.get(TAGS_URL, {'assigned_only': 1})
+
+        s1 = TagSerializer(tag1)
+        s2 = TagSerializer(tag2)
+        self.assertIn(s1.data, res.data)
+        self.assertNotIn(s2.data, res.data)
+
+    def test_filtered_tags_unique(self):
+        """Test filtered tags returns a unique list."""
+        tag = Tag.objects.create(user=self.user, name='Eggs')
+        Tag.objects.create(user=self.user, name='Lentils')
+        experiment1 = Experiment.objects.create(
+            title='Eggs Benedict tag test',
+            time_minutes=60,
+            price=Decimal('100'),
+            user=self.user,
+        )
+        experiment2 = Experiment.objects.create(
+            title='Herb Eggs tag test',
+            time_minutes=20,
+            price=Decimal('88'),
+            user=self.user
+        )
+        experiment1.tags.add(tag)
+        experiment2.tags.add(tag)
+
+        res = self.client.get(TAGS_URL, {'assigned_only': 1})
+
+        self.assertEqual(len(res.data), 1)

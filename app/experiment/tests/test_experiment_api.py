@@ -2,6 +2,10 @@
 Test for experiment APIs.
 """
 from decimal import Decimal
+import tempfile
+import os
+
+from PIL import Image
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -28,6 +32,11 @@ EXPERIMENT_URL = reverse('experiment:experiment-list')
 def detail_url(experiment_id):
     """Create and return a experiment URL."""
     return reverse('experiment:experiment-detail', args=[experiment_id])
+
+
+def image_upload_url(experiment_id):
+    """create and return an image upload URL."""
+    return reverse('experiment:experiment-upload-image', args=[experiment_id])
 
 
 def create_experiment(user, **params):
@@ -81,7 +90,7 @@ class PrivateExperimentApiTest(TestCase):
 
         res = self.client.get(EXPERIMENT_URL)
 
-        experiments = Experiment.objects.all().order_by('-id')
+        experiments = Experiment.objects.all().order_by('id')
         serializer = ExperimentSerializer(experiments, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
@@ -396,10 +405,81 @@ class PrivateExperimentApiTest(TestCase):
         self.assertEqual(res.status_code,status.HTTP_200_OK)
         self.assertEqual(experiment.ingredients.count(), 0)
 
+    def test_filter_by_tags(self):
+        """Test filtering experiments by tags."""
+        e1 = create_experiment(user=self.user, title='title 1')
+        e2 = create_experiment(user=self.user, title='title 2')
+        tag1 = Tag.objects.create(user=self.user, name='tag 1')
+        tag2 = Tag.objects.create(user=self.user, name='tag 2')
+        e1.tags.add(tag1)
+        e2.tags.add(tag2)
+        e3 = create_experiment(user=self.user, title='title 3')
+
+        params = {'tags': f'{tag1.id},{tag2.id}'}
+        res = self.client.get(EXPERIMENT_URL, params)
+
+        s1 = ExperimentSerializer(e1)
+        s2 = ExperimentSerializer(e2)
+        s3 = ExperimentSerializer(e3)
+        self.assertIn(s1.data, res.data)
+        self.assertIn(s2.data, res.data)
+        self.assertNotIn(s3.data, res.data)
+
+    def test_filter_by_ingredient(self):
+        """Test filtering experiment by ingredient."""
+        e1 = create_experiment(user=self.user, title='title 1')
+        e2 = create_experiment(user=self.user, title='title 2')
+        in1 = Ingredient.objects.create(user=self.user, name='ingredient 1')
+        in2 = Ingredient.objects.create(user=self.user, name='ingredient 2')
+        e1.ingredients.add(in1)
+        e2.ingredients.add(in2)
+        e3 = create_experiment(user=self.user, title='title 3')
+
+        params = {'ingredients': f'{in1.id},{in2.id}'}
+        res = self.client.get(EXPERIMENT_URL, params)
+
+        s1 = ExperimentSerializer(e1)
+        s2 = ExperimentSerializer(e2)
+        s3 = ExperimentSerializer(e3)
+        self.assertIn(s1.data, res.data)
+        self.assertIn(s2.data, res.data)
+        self.assertNotIn(s3.data, res.data)
 
 
+class ImageUploadTests(TestCase):
+    """Test for the image upload API."""
 
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'user@example.com',
+            'password123'
+        )
+        self.client.force_authenticate(self.user)
+        self.experiment = create_experiment(user=self.user)
 
+    def TearDown(self):
+        self.experiment.image.delete()
 
+    def test_upload_image(self):
+        """Test uploading an image to a experiment."""
+        url = image_upload_url(self.experiment.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
+            img = Image.new('RGB', (10,10))
+            img.save(image_file, format='JPEG')
+            image_file.seek(0)
+            payload = {'image': image_file}
+            res = self.client.post(url, payload, format='multipart')
 
+        self.experiment.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.experiment.image.path))
 
+    def test_upload_image_bad_requesr(self):
+        """Test uploading invalid image."""
+        url = image_upload_url(self.experiment.id)
+        payload = {'image': 'notanimage'}
+        res = self.client.post(url, payload, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
