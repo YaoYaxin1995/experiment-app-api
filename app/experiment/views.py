@@ -12,7 +12,7 @@ from rest_framework import (
     mixins,
     status,
 )
-from  rest_framework.decorators import action
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -23,6 +23,7 @@ from core.models import (
     Ingredient,
 )
 from experiment import serializers
+
 
 @extend_schema_view(
     list=extend_schema(
@@ -66,7 +67,6 @@ class ExperimentViewSet(viewsets.ModelViewSet):
         return queryset.filter(
             user=self.request.user
         ).order_by('id').distinct()
-
 
     def get_serializer_class(self):
         """Return the serializer class for request."""

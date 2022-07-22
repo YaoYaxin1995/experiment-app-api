@@ -109,8 +109,14 @@ class PrivateIngredientsApiTests(TestCase):
 
     def test_filter_ingredients_assighed_to_experiment(self):
         """Test listing ingredients by those assigned to experiments."""
-        in1 = Ingredient.objects.create(user=self.user, name='ingredient test filter 1')
-        in2 = Ingredient.objects.create(user=self.user, name='ingredient test filter 2')
+        in1 = Ingredient.objects.create(
+            user=self.user,
+            name='ingredient test filter 1'
+            )
+        in2 = Ingredient.objects.create(
+            user=self.user,
+            name='ingredient test filter 2'
+            )
         experiment = Experiment.objects.create(
             title='iCAN',
             time_minutes=5,

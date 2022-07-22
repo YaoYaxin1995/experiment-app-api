@@ -12,11 +12,13 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 
+
 def experiment_image_file_path(instance, filename):
     """Generate file path for new experiment image."""
     ext = os.path.splitext(filename)[1]
     filename = f'{uuid.uuid4()}{ext}'
     return os.path.join('uploads', 'experiment', filename)
+
 
 class UserManager(BaseUserManager):
     """manager for user."""

@@ -46,7 +46,7 @@ class ExperimentDetailSerializer(ExperimentSerializer):
     """Serializer for experiment detail view."""
 
     class Meta(ExperimentSerializer.Meta):
-        fields = ExperimentSerializer.Meta.fields + ['description','image']
+        fields = ExperimentSerializer.Meta.fields + ['description', 'image']
 
     def _get_or_create_tags(self, tags, experiment):
         """Handle getting or creating tags on as needed."""

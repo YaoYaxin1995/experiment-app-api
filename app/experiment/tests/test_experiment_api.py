@@ -349,7 +349,7 @@ class PrivateExperimentApiTest(TestCase):
         for ingredient in payload['ingredients']:
             exists = experiment.ingredients.filter(
                 name=ingredient['name'],
-                user = self.user,
+                user=self.user,
             ).exists()
             self.assertTrue(exists)
 
@@ -402,7 +402,7 @@ class PrivateExperimentApiTest(TestCase):
         url = detail_url(experiment.id)
         res = self.client.patch(url, payload, format='json')
 
-        self.assertEqual(res.status_code,status.HTTP_200_OK)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(experiment.ingredients.count(), 0)
 
     def test_filter_by_tags(self):
@@ -465,7 +465,7 @@ class ImageUploadTests(TestCase):
         """Test uploading an image to a experiment."""
         url = image_upload_url(self.experiment.id)
         with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
-            img = Image.new('RGB', (10,10))
+            img = Image.new('RGB', (10, 10))
             img.save(image_file, format='JPEG')
             image_file.seek(0)
             payload = {'image': image_file}
